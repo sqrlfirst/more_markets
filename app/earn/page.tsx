@@ -7,7 +7,7 @@ const EarnPage: React.FC = () => {
             <h1 className="text-4xl mb-8">My Deposits</h1>
             <DepositMoreTable></DepositMoreTable>
 
-            <h1s className="text-4xl mb-8">MORE Vaults</h1s>
+            <h1 className="text-4xl mb-8">MORE Vaults</h1>
             <EarnMoreTable></EarnMoreTable>
         </div>
     );
