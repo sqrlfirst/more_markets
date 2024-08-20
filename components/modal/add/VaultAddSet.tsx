@@ -65,18 +65,18 @@ const VaultAddSet: React.FC<Props> = ({
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         // TODO
-        writeContract({
-          address: `0x${token}`,
-          MarketsAbi,
-          functionName: 
-          args:
-        });
-        writeContract({
-            address: `0x${process.env.MARKETS}`,
-            MarketsAbi,
-            functionName: 
-            args:
-        });
+        // writeContract({
+        //   address: `0x${token}`,
+        //   MarketsAbi,
+        //   functionName:
+        //   args:
+        // });
+        // writeContract({
+        //     address: `0x${process.env.MARKETS}`,
+        //     MarketsAbi,
+        //     functionName:
+        //     args:
+        // });
     };
 
     const balanceString = balance.toString();

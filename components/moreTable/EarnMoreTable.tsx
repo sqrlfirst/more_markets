@@ -13,7 +13,7 @@ import ListIconToken from "../token/ListIconToken";
 import { useRouter } from "next/navigation";
 import FormatPourcentage from "../tools/formatPourcentage";
 import FormatTokenMillion from "../tools/formatTokenMillion";
-import { useContractRead } from "wagmi";
+import { useReadContract } from "wagmi";
 import { MarketsAbi } from "@/app/abi/MarketsAbi";
 import { MarketParams } from "@/types/marketParams";
 import { Markets } from "@/types/markets";
@@ -24,197 +24,75 @@ interface Props {
 type EthereumAddress = `0x${string}`;
 
 const EarnMoreTable: React.FC<Props> = ({ inDetail = true }) => {
-    const arrayOfMarkets: EthereumAddress[] = useContractRead({
-        address: `0x${process.env.MARKETS}`,
+    const {
+        data: arrayOfMarkets,
+        error,
+        isPending,
+    } = useReadContract({
+        address: process.env.MARKETS as EthereumAddress,
         abi: MarketsAbi,
         functionName: "arrayOfMarkets",
     });
 
-    const investments: InvestmentData[] = arrayOfMarkets.forEach((market) => {
-        // 1. tokenSymbol ->
-        // 2. netAPY ->
-        // 3. totalDeposits ->
-        // 4. totalValueUSD
-        // 5. curator
-        // 6. collateral ->
-        // 7. unsecured ->
-        // 8. unsecuredAPY ->
-        // 9.  credoraRating -> get it from cedora
+    const investments: InvestmentData[] | undefined = arrayOfMarkets?.map(
+        (market) => {
+            // 1. tokenSymbol ->
+            // 2. netAPY ->
+            // 3. totalDeposits ->
+            // 4. totalValueUSD
+            // 5. curator
+            // 6. collateral ->
+            // 7. unsecured ->
+            // 8. unsecuredAPY ->
+            // 9.  credoraRating -> get it from cedora
 
-        const marketInfo: Markets = useContractRead({
-            address: `0x${process.env.MARKETS}`,
-            abi: MarketsAbi,
-            functionName: "market",
-            args: [market],
-        });
+            const { data: marketInfo } = useReadContract({
+                address: process.env.MARKETS as EthereumAddress,
+                abi: MarketsAbi,
+                functionName: "market",
+                args: [market],
+            });
 
-        const marketParams: MarketParams = useContractRead({
-            address: `0x${process.env.MARKETS}`,
-            abi: MarketsAbi,
-            functionName: "idToMarketParams",
-            args: [market],
-        });
+            const { data: marketParams } = useReadContract({
+                address: process.env.MARKETS as EthereumAddress,
+                abi: MarketsAbi,
+                functionName: "idToMarketParams",
+                args: [market],
+            });
 
-        const mockData: InvestmentData = {
-            tokenSymbol: "USDC",
-            netAPY: 14.1,
-            totalDeposits: 3289.62,
-            totalValueUSD: 1.96,
-            curator: "Flowverse",
-            collateral: ["usdc", "btc", "add"],
-            unsecured: 7890.12,
-            unsecuredAPY: 16.8,
-            credoraRating: "B / AA+",
-        };
+            const mockData: InvestmentData = {
+                tokenSymbol:
+                    marketParams !== undefined ? marketParams[0] : "undefined",
+                netAPY: 12345,
+                totalDeposits:
+                    marketInfo !== undefined
+                        ? (marketInfo[0] as unknown as number)
+                        : 0,
+                totalValueUSD: 12345,
+                curator: "MOCK",
+                collateral: ["MOCK", "MOCK", "MOCK"],
+                unsecured: 12345,
+                unsecuredAPY: 12345,
+                credoraRating: "MOCK",
+            };
+            return mockData;
+        }
+    );
 
-        return mockData;
-    });
+    // const investments: InvestmentData[] = [
+    //     {
+    //         tokenSymbol: "marketParams.collateralToken",
+    //         netAPY: 12345,
+    //         totalDeposits: 12345,
+    //         totalValueUSD: 12345,
+    //         curator: "MOCK",
+    //         collateral: ["MOCK", "MOCK", "MOCK"],
+    //         unsecured: 12345,
+    //         unsecuredAPY: 12345,
+    //         credoraRating: "MOCK",
+    //     },
+    // ];
 
-    const investments: InvestmentData[] = [
-        {
-            tokenSymbol: "USDC",
-            netAPY: 14.1,
-            totalDeposits: 3289.62,
-            totalValueUSD: 1.96,
-            curator: "Flowverse",
-            collateral: ["usdc", "btc", "add"],
-            unsecured: 7890.12,
-            unsecuredAPY: 16.8,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "USDT",
-            netAPY: 12.3,
-            totalDeposits: 5432.1,
-            totalValueUSD: 3.25,
-            curator: "AXA",
-            collateral: ["usdc", "btc", "add"],
-            unsecured: 6543.21,
-            unsecuredAPY: 13.5,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "USDA",
-            netAPY: 8.6,
-            totalDeposits: 7654.32,
-            totalValueUSD: 1.55,
-            curator: "Enjin",
-            collateral: ["usdc", "ada", "add", "aave"],
-            unsecured: 4321.09,
-            unsecuredAPY: 17.5,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "USDC",
-            netAPY: 4.9,
-            totalDeposits: 2987.65,
-            totalValueUSD: 5.02,
-            curator: "Plygon",
-            collateral: ["usdc", "ada", "add", "aave"],
-            unsecured: 8765.43,
-            unsecuredAPY: 15.9,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "USDT",
-            netAPY: 15.3,
-            totalDeposits: 4567.89,
-            totalValueUSD: 2.89,
-            curator: "adder",
-            collateral: ["usdc", "algo", "add"],
-            unsecured: 8765.43,
-            unsecuredAPY: 18.5,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "USDT",
-            netAPY: 14.7,
-            totalDeposits: 9876.54,
-            totalValueUSD: 6.34,
-            curator: "Metaverse",
-            collateral: ["usdc", "algo", "add"],
-            unsecured: 3210.98,
-            unsecuredAPY: 14.7,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "USDA",
-            netAPY: 13.8,
-            totalDeposits: 1234.56,
-            totalValueUSD: 0.75,
-            curator: "Bitcoin",
-            collateral: ["usdc", "0xbtc", "ada"],
-            unsecured: 6789.01,
-            unsecuredAPY: 15.9,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "DAI",
-            netAPY: 12.7,
-            totalDeposits: 6789.01,
-            totalValueUSD: 3.99,
-            curator: "Bitcoin",
-            collateral: ["usdc", "btc", "add", "aave"],
-            unsecured: 9876.54,
-            unsecuredAPY: 12.3,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "Walgo",
-            netAPY: 15.3,
-            totalDeposits: 3210.98,
-            totalValueUSD: 1.87,
-            curator: "Bitcoin",
-            collateral: ["usdc", "algo", "add"],
-            unsecured: 4567.89,
-            unsecuredAPY: 7.8,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "Wadd",
-            netAPY: 8.9,
-            totalDeposits: 8765.43,
-            totalValueUSD: 5.67,
-            curator: "Bitcoin",
-            collateral: ["usdc", "btc", "add", "aave"],
-            unsecured: 2987.65,
-            unsecuredAPY: 4.6,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "USDA",
-            netAPY: 18.4,
-            totalDeposits: 4321.09,
-            totalValueUSD: 2.45,
-            curator: "Bitcoin",
-            collateral: ["usdc", "algo", "add"],
-            unsecured: 7654.32,
-            unsecuredAPY: 8.2,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "USDT",
-            netAPY: 12.3,
-            totalDeposits: 6543.21,
-            totalValueUSD: 3.67,
-            curator: "Bitcoin",
-            collateral: ["usdc", "btc", "add", "aave"],
-            unsecured: 5432.1,
-            unsecuredAPY: 14.6,
-            credoraRating: "B / AA+",
-        },
-        {
-            tokenSymbol: "DAI",
-            netAPY: 11.3,
-            totalDeposits: 7890.12,
-            totalValueUSD: 4.98,
-            curator: "Bitcoin",
-            collateral: ["usdc", "algo", "add"],
-            unsecured: 3289.62,
-            unsecuredAPY: 7.5,
-            credoraRating: "B / AA+",
-        },
-    ];
     const [isStickyDisabled, setIsStickyDisabled] = useState(false);
 
     const router = useRouter();
@@ -326,7 +204,7 @@ const EarnMoreTable: React.FC<Props> = ({ inDetail = true }) => {
                     </tr>
                 </thead>
                 <tbody className="bg-transparent">
-                    {investments.map((item, index, arr) => (
+                    {investments?.map((item, index, arr) => (
                         <tr
                             key={index}
                             onClick={() => goToDetail(item)}
