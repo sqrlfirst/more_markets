@@ -35,25 +35,23 @@ const EarnMoreTable: React.FC<{}> = () => {
 
     const sampleLoans: BorrowData[] | undefined = arrayOfMarkets?.map(
         (market) => {
-            const { data: marketInfo } = useReadContract({
-                address: process.env.MARKETS as EthereumAddress,
-                abi: MarketsAbi,
-                functionName: "market",
-                args: [market],
-            });
+            // const { data: marketInfo } = useReadContract({
+            //     address: process.env.MARKETS as EthereumAddress,
+            //     abi: MarketsAbi,
+            //     functionName: "market",
+            //     args: [market],
+            // });
 
-            const { data: marketParams } = useReadContract({
-                address: process.env.MARKETS as EthereumAddress,
-                abi: MarketsAbi,
-                functionName: "idToMarketParams",
-                args: [market],
-            });
+            // const { data: marketParams } = useReadContract({
+            //     address: process.env.MARKETS as EthereumAddress,
+            //     abi: MarketsAbi,
+            //     functionName: "idToMarketParams",
+            //     args: [market],
+            // });
 
             const mockData: BorrowData = {
-                collateralToken:
-                    marketParams !== undefined ? marketParams[1] : "unknown",
-                loanToken:
-                    marketParams !== undefined ? marketParams[0] : "unknown",
+                collateralToken: market,
+                loanToken: market,
                 liquidationLTV: 12345,
                 liquidationLTV2: 12345,
                 borrowAPY: 12345,

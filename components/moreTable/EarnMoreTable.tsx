@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import FormatPourcentage from "../tools/formatPourcentage";
 import FormatTokenMillion from "../tools/formatTokenMillion";
 import { useReadContract } from "wagmi";
+import { readContract } from "wagmi/actions";
 import { MarketsAbi } from "@/app/abi/MarketsAbi";
 import { MarketParams } from "@/types/marketParams";
 import { Markets } from "@/types/markets";
@@ -46,28 +47,24 @@ const EarnMoreTable: React.FC<Props> = ({ inDetail = true }) => {
             // 8. unsecuredAPY ->
             // 9.  credoraRating -> get it from cedora
 
-            const { data: marketInfo } = useReadContract({
-                address: process.env.MARKETS as EthereumAddress,
-                abi: MarketsAbi,
-                functionName: "market",
-                args: [market],
-            });
+            // const { data: marketInfo } = useReadContract({
+            //     address: process.env.MARKETS as EthereumAddress,
+            //     abi: MarketsAbi,
+            //     functionName: "market",
+            //     args: [market],
+            // });
 
-            const { data: marketParams } = useReadContract({
-                address: process.env.MARKETS as EthereumAddress,
-                abi: MarketsAbi,
-                functionName: "idToMarketParams",
-                args: [market],
-            });
+            // const { data: marketParams } = useReadContract({
+            //     address: process.env.MARKETS as EthereumAddress,
+            //     abi: MarketsAbi,
+            //     functionName: "idToMarketParams",
+            //     args: [market],
+            // });
 
             const mockData: InvestmentData = {
-                tokenSymbol:
-                    marketParams !== undefined ? marketParams[0] : "undefined",
+                tokenSymbol: market,
                 netAPY: 12345,
-                totalDeposits:
-                    marketInfo !== undefined
-                        ? (marketInfo[0] as unknown as number)
-                        : 0,
+                totalDeposits: 12345,
                 totalValueUSD: 12345,
                 curator: "MOCK",
                 collateral: ["MOCK", "MOCK", "MOCK"],

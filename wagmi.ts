@@ -1,5 +1,6 @@
 import { getDefaultConfig, Chain } from "@rainbow-me/rainbowkit";
 import { base, flowPreviewnet } from "wagmi/chains";
+import { readContract } from "@wagmi/core";
 
 const flowTestnet = {
     id: 545,
