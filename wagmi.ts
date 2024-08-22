@@ -1,5 +1,7 @@
 import { getDefaultConfig, Chain } from "@rainbow-me/rainbowkit";
 import { base, flowPreviewnet } from "wagmi/chains";
+import { injected } from "wagmi/connectors";
+import { http, createConfig, webSocket } from "wagmi";
 import { readContract } from "@wagmi/core";
 
 const flowTestnet = {
@@ -8,7 +10,7 @@ const flowTestnet = {
     nativeCurrency: { name: "Flow", symbol: "FLOW", decimals: 18 },
     rpcUrls: {
         default: {
-            http: ["https://testnet.evm.nodes.onflow.org"],
+            http: ["https://testnet.evm.nodes.onflow.org/"],
         },
     },
     blockExplorers: {
@@ -22,16 +24,12 @@ const flowTestnet = {
 } as const satisfies Chain;
 
 // Create wagmiConfig
-export const config = getDefaultConfig({
-    appName: "RainbowKit App",
-    projectId: "YOUR_PROJECT_ID",
-    chains: [
-        {
-            ...flowTestnet,
-            iconBackground: "#05ef8b",
-            iconUrl:
-                "https://s2.coinmarketcap.com/static/img/coins/64x64/4558.png",
-        },
-    ],
+export const config = createConfig({
+    chains: [flowTestnet],
+    connectors: [injected()],
+    transports: {
+        [flowTestnet.id]: http("https://testnet.evm.nodes.onflow.org"),
+    },
     ssr: true,
+    pollingInterval: 30_000,
 });

@@ -10,59 +10,23 @@ import VaultDeposit from "../modal/deposit/VaultDeposit";
 import TotalVolumeToken from "../token/TotalVolumeToken";
 import { BorrowData } from "@/types/borrowData";
 import IconToken from "../token/IconToken";
+import TokenName from "../token/TokenName";
 import VaultBorrow from "../modal/borrow/VaultBorrow";
 import { useRouter } from "next/navigation";
 import FormatTwoPourcentage from "../tools/formatTwoPourcentage";
 import FormatPourcentage from "../tools/formatPourcentage";
 import FormatTokenMillion from "../tools/formatTokenMillion";
-import { useReadContract } from "wagmi";
+import { type BaseError, useReadContract, useBlockNumber } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
 import { MarketsAbi } from "@/app/abi/MarketsAbi";
 import { MarketParams } from "@/types/marketParams";
 import { Markets } from "@/types/markets";
+import BorrowMoreTableRow from "./BorrowMoreTableRow";
+interface IBorrowMoreTable {
+    availableMarkets: readonly `0x${string}`[];
+}
 
-type EthereumAddress = `0x${string}`;
-
-const EarnMoreTable: React.FC<{}> = () => {
-    const {
-        data: arrayOfMarkets,
-        error,
-        isPending,
-    } = useReadContract({
-        address: process.env.MARKETS as EthereumAddress,
-        abi: MarketsAbi,
-        functionName: "arrayOfMarkets",
-    });
-
-    const sampleLoans: BorrowData[] | undefined = arrayOfMarkets?.map(
-        (market) => {
-            // const { data: marketInfo } = useReadContract({
-            //     address: process.env.MARKETS as EthereumAddress,
-            //     abi: MarketsAbi,
-            //     functionName: "market",
-            //     args: [market],
-            // });
-
-            // const { data: marketParams } = useReadContract({
-            //     address: process.env.MARKETS as EthereumAddress,
-            //     abi: MarketsAbi,
-            //     functionName: "idToMarketParams",
-            //     args: [market],
-            // });
-
-            const mockData: BorrowData = {
-                collateralToken: market,
-                loanToken: market,
-                liquidationLTV: 12345,
-                liquidationLTV2: 12345,
-                borrowAPY: 12345,
-                utilization: 12345,
-                totalDeposits: 3289.62,
-                totalValueUSD: 12345,
-            };
-            return mockData;
-        }
-    );
-
+const BorrowMoreTable: React.FC<IBorrowMoreTable> = ({ availableMarkets }) => {
     const router = useRouter();
     const [isStickyDisabled, setIsStickyDisabled] = useState(false);
     const toggleSticky = () => {
@@ -78,6 +42,9 @@ const EarnMoreTable: React.FC<{}> = () => {
     const goToDetail = (item: BorrowData) => {
         router.push("/borrow/" + item.collateralToken);
     };
+
+    // console.log(arrayOfMarkets);
+
     return (
         <div
             className="overflow-x-auto relative rounded-[15px] mb-16"
@@ -152,10 +119,10 @@ const EarnMoreTable: React.FC<{}> = () => {
                     </tr>
                 </thead>
                 <tbody className="bg-transparent">
-                    {sampleLoans?.map((item, index, arr) => (
+                    {availableMarkets?.map((item, index, arr) => (
                         <tr
                             key={index}
-                            onClick={() => goToDetail(item)}
+                            // onClick={() => goToDetail(item)}
                             style={
                                 index === arr.length - 1
                                     ? {
@@ -170,97 +137,10 @@ const EarnMoreTable: React.FC<{}> = () => {
                                     : "dark:bg-[#191919]"
                             }`}
                         >
-                            <td className="py-4 px-6 items-center h-full">
-                                <div className="flex items-center">
-                                    <div className="mr-2 w-6 h-6">
-                                        <IconToken tokenName="abt"></IconToken>
-                                    </div>
-                                    {item.collateralToken}
-                                </div>
-                            </td>
-                            <td className="py-4 px-6 items-center h-full  ">
-                                <div className="flex items-center">
-                                    <div className="mr-2 w-6 h-6">
-                                        <IconToken tokenName="adx"></IconToken>
-                                    </div>
-                                    {item.loanToken}
-                                </div>
-                            </td>
-                            <td className="py-4  items-center h-full ">
-                                <div className="flex gap-1 justify-start">
-                                    <FormatTwoPourcentage
-                                        value={item.liquidationLTV}
-                                        value2={item.liquidationLTV2}
-                                    ></FormatTwoPourcentage>
-                                </div>
-                            </td>
-                            <td className="py-4 px-6 items-center h-full">
-                                <div className="flex justify-start">
-                                    <FormatPourcentage
-                                        value={item.borrowAPY}
-                                    ></FormatPourcentage>
-                                </div>
-                            </td>
-                            <td className="py-4 px-6 items-center h-full">
-                                <div className="flex">
-                                    <FormatPourcentage
-                                        value={item.utilization}
-                                    ></FormatPourcentage>
-                                </div>
-                            </td>
-                            <td className="py-4 px-6 items-center   h-full ">
-                                <div className="flex justify-start">
-                                    <FormatTokenMillion
-                                        value={item.totalDeposits}
-                                        token={item.loanToken}
-                                        totalValue={item.totalDeposits}
-                                    ></FormatTokenMillion>
-                                </div>
-                            </td>
-                            <td
-                                className={`py-4 px-6 items-center justify-end h-full ${
-                                    isStickyDisabled ? "" : "sticky"
-                                }`}
-                                style={{
-                                    paddingRight: 10,
-                                    right: 0,
-                                    backgroundColor: `${
-                                        index % 2 === 0 ? "#141414" : "#191919"
-                                    }`,
-                                }}
-                            >
-                                <div
-                                    onClick={(event) => event.stopPropagation()}
-                                >
-                                    <ButtonDialog
-                                        color="secondary"
-                                        buttonText="Borrow"
-                                        onButtonClick={toggleSticky}
-                                    >
-                                        {(closeModal) => (
-                                            <>
-                                                <div className=" w-full h-full">
-                                                    <VaultBorrow
-                                                        title="USDMax"
-                                                        token={
-                                                            item.collateralToken
-                                                        }
-                                                        apy={14.1}
-                                                        balanceToken={473.18}
-                                                        balanceFlow={785.45}
-                                                        ltv="90% / 125%"
-                                                        totalDeposit={3289.62}
-                                                        totalTokenAmount={1.96}
-                                                        curator="Flowverse"
-                                                        credora="AAA"
-                                                        closeModal={closeModal}
-                                                    ></VaultBorrow>
-                                                </div>
-                                            </>
-                                        )}
-                                    </ButtonDialog>
-                                </div>
-                            </td>
+                            <BorrowMoreTableRow
+                                market={item}
+                                index={index}
+                            ></BorrowMoreTableRow>
                         </tr>
                     ))}
                 </tbody>
@@ -268,4 +148,4 @@ const EarnMoreTable: React.FC<{}> = () => {
         </div>
     );
 };
-export default EarnMoreTable;
+export default BorrowMoreTable;
