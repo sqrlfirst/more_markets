@@ -15,6 +15,8 @@ import {
     useWriteContract,
 } from "wagmi";
 import { MarketsAbi } from "@/app/abi/DebtTokenAbi";
+import { MarketParams } from "@/types/marketParams";
+import { useAccount } from "wagmi";
 
 interface Props {
     title: string;
@@ -24,6 +26,7 @@ interface Props {
     ltv: string;
     totalAdd: number;
     totalTokenAmount: number;
+    marketParams: MarketParams;
     setAmount: (amount: number) => void;
     closeModal: () => void;
 }
@@ -36,6 +39,7 @@ const VaultAddSet: React.FC<Props> = ({
     ltv,
     totalAdd,
     totalTokenAmount,
+    marketParams,
     setAmount,
     closeModal,
 }) => {
@@ -65,18 +69,27 @@ const VaultAddSet: React.FC<Props> = ({
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         // TODO
-        // writeContract({
-        //   address: `0x${token}`,
-        //   MarketsAbi,
-        //   functionName:
-        //   args:
-        // });
-        // writeContract({
-        //     address: `0x${process.env.MARKETS}`,
-        //     MarketsAbi,
-        //     functionName:
-        //     args:
-        // });
+        const { address } = useAccount();
+
+        const loanToken = marketParams.loanToken;
+        const collateralToken = marketParams.collateralToken;
+        const oracle = marketParams.oracle;
+        const irm = marketParams.irm;
+        const lltv = marketParams.lltv;
+        const onBehalf = address;
+
+        writeContract({
+            address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
+            abi: MarketsAbi,
+            functionName: "supply",
+            args: [
+                { loanToken, collateralToken, oracle, irm, lltv },
+                BigInt(0),
+                BigInt(1234),
+                onBehalf,
+                "",
+            ],
+        });
     };
 
     const balanceString = balance.toString();

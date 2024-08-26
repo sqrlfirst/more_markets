@@ -19,23 +19,17 @@ import { MarketsAbi } from "@/app/abi/MarketsAbi";
 import { MarketParams } from "@/types/marketParams";
 import { Markets } from "@/types/markets";
 interface Props {
+    availableVaults: readonly `0x${string}`[];
     inDetail?: boolean;
 }
 
 type EthereumAddress = `0x${string}`;
 
-const EarnMoreTable: React.FC<Props> = ({ inDetail = true }) => {
-    const {
-        data: arrayOfMarkets,
-        error,
-        isPending,
-    } = useReadContract({
-        address: process.env.MARKETS as EthereumAddress,
-        abi: MarketsAbi,
-        functionName: "arrayOfMarkets",
-    });
-
-    const investments: InvestmentData[] | undefined = arrayOfMarkets?.map(
+const EarnMoreTable: React.FC<Props> = ({
+    availableVaults,
+    inDetail = true,
+}) => {
+    const investments: InvestmentData[] | undefined = availableVaults?.map(
         (market) => {
             // 1. tokenSymbol ->
             // 2. netAPY ->
@@ -75,20 +69,6 @@ const EarnMoreTable: React.FC<Props> = ({ inDetail = true }) => {
             return mockData;
         }
     );
-
-    // const investments: InvestmentData[] = [
-    //     {
-    //         tokenSymbol: "marketParams.collateralToken",
-    //         netAPY: 12345,
-    //         totalDeposits: 12345,
-    //         totalValueUSD: 12345,
-    //         curator: "MOCK",
-    //         collateral: ["MOCK", "MOCK", "MOCK"],
-    //         unsecured: 12345,
-    //         unsecuredAPY: 12345,
-    //         credoraRating: "MOCK",
-    //     },
-    // ];
 
     const [isStickyDisabled, setIsStickyDisabled] = useState(false);
 

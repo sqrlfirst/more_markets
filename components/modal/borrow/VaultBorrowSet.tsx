@@ -7,6 +7,9 @@ import ListIconToken from "@/components/token/ListIconToken";
 import FormatPourcentage from "@/components/tools/formatPourcentage";
 import { useWriteContract } from "wagmi";
 import { MarketsAbi } from "@/app/abi/MarketsAbi";
+import { MarketParams } from "@/types/marketParams";
+import { useAccount } from "wagmi";
+
 interface Props {
     title: string;
     token: string;
@@ -17,6 +20,7 @@ interface Props {
     totalDeposit: number;
     totalTokenAmount: number;
     credora: string;
+    marketParams: MarketParams;
     setAmount: (amount: number, borrow: number) => void;
     closeModal: () => void;
 }
@@ -31,6 +35,7 @@ const VaultBorrowSet: React.FC<Props> = ({
     ltv,
     totalDeposit,
     totalTokenAmount,
+    marketParams,
     setAmount,
     closeModal,
 }) => {
@@ -63,21 +68,23 @@ const VaultBorrowSet: React.FC<Props> = ({
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        const loanToken = "abcd" as `0x${string}`;
-        const collateralToken = "abcd" as `0x${string}`;
-        const oracle = "abcd" as `0x${string}`;
-        const irm = "abcd" as `0x${string}`;
-        const lltv = BigInt(1);
-        const onBehalf = "abcd" as `0x${string}`;
-        const receiver = "abcd" as `0x${string}`;
+        const { address } = useAccount();
+
+        const onBehalf = address !== undefined ? address : `0x0`; // feature of sc that is not supported in current fe implementation
+        const receiver = address !== undefined ? address : `0x0`;
+        const loanToken = marketParams.loanToken;
+        const collateralToken = marketParams.collateralToken;
+        const oracle = marketParams.oracle;
+        const irm = marketParams.irm;
+        const lltv = marketParams.lltv;
 
         writeContract({
-            address: process.env.MARKETS as `0x${string}`,
+            address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
             abi: MarketsAbi,
             functionName: "borrow",
             args: [
                 { loanToken, collateralToken, oracle, irm, lltv },
-                BigInt(1234),
+                BigInt(0),
                 BigInt(1234),
                 onBehalf,
                 receiver,
