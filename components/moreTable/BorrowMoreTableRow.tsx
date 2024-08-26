@@ -9,6 +9,7 @@ import FormatTokenMillion from "../tools/formatTokenMillion";
 import { BorrowData } from "@/types/borrowData";
 import ButtonDialog from "../buttonDialog/buttonDialog";
 import VaultBorrow from "../modal/borrow/VaultBorrow";
+import { MarketParams } from "@/types/marketParams";
 
 interface BorrowMoreTableRowProps {
     market: `0x${string}`;
@@ -30,6 +31,14 @@ const BorrowMoreTableRow: React.FC<BorrowMoreTableRowProps> = ({
         functionName: "idToMarketParams",
         args: [market],
     });
+
+    const marketParameters: MarketParams = {
+        loanToken: marketParams !== undefined ? marketParams[0] : `0x0`,
+        collateralToken: marketParams !== undefined ? marketParams[1] : `0x0`,
+        oracle: marketParams !== undefined ? marketParams[2] : `0x0`,
+        irm: marketParams !== undefined ? marketParams[3] : `0x0`,
+        lltv: marketParams !== undefined ? marketParams[4] : BigInt(0),
+    };
 
     const item: BorrowData = {
         collateralToken: marketParams !== undefined ? marketParams[1] : "",
@@ -128,6 +137,7 @@ const BorrowMoreTableRow: React.FC<BorrowMoreTableRowProps> = ({
                                             totalTokenAmount={1.96}
                                             curator="Flowverse"
                                             credora="AAA"
+                                            marketParams={marketParameters}
                                             closeModal={closeModal}
                                         ></VaultBorrow>
                                     </div>

@@ -25,13 +25,15 @@ const EarnPage: React.FC = () => {
         refetchProject?.();
     }, [isSuccess]);
 
+    const vaults: readonly `0x${string}`[] = [`0x0000`, `0x1234`];
+
     return (
         <div>
             <h1 className="text-4xl mb-8">My Deposits</h1>
             <DepositMoreTable></DepositMoreTable>
 
             <h1 className="text-4xl mb-8">MORE Vaults</h1>
-            <EarnMoreTable availableVaults={arrayOfVaults}></EarnMoreTable>
+            <EarnMoreTable availableVaults={vaults}></EarnMoreTable>
         </div>
     );
 };

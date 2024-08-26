@@ -65,11 +65,11 @@ const VaultAddSet: React.FC<Props> = ({
     };
 
     const { data: hash, error, isPending, writeContract } = useWriteContract();
+    const { address } = useAccount();
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         // TODO
-        const { address } = useAccount();
 
         const loanToken = marketParams.loanToken;
         const collateralToken = marketParams.collateralToken;

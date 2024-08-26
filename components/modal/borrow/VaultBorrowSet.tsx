@@ -65,10 +65,10 @@ const VaultBorrowSet: React.FC<Props> = ({
     const handleCancel = () => {
         console.log("CANCEL");
     };
+    const { address } = useAccount();
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        const { address } = useAccount();
 
         const onBehalf = address !== undefined ? address : `0x0`; // feature of sc that is not supported in current fe implementation
         const receiver = address !== undefined ? address : `0x0`;
