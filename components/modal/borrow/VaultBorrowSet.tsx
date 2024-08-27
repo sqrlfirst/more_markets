@@ -124,13 +124,12 @@ const VaultBorrowSet: React.FC<Props> = ({
                 writeContract({
                     address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
                     abi: MarketsAbi,
-                    functionName: "supply",
+                    functionName: "supplyCollateral",
                     args: [
                         { loanToken, collateralToken, oracle, irm, lltv },
-                        BigInt(0),
                         depositAmount,
                         onBehalf,
-                        receiver,
+                        "0x",
                     ],
                 });
                 setTxStep(3);
