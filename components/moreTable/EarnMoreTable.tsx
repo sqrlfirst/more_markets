@@ -23,8 +23,6 @@ interface Props {
     inDetail?: boolean;
 }
 
-type EthereumAddress = `0x${string}`;
-
 const EarnMoreTable: React.FC<Props> = ({
     availableVaults,
     inDetail = true,

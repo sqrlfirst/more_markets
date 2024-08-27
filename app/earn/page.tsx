@@ -26,16 +26,17 @@ const EarnPage: React.FC = () => {
     }, [isSuccess]);
 
     const vaults: readonly `0x${string}`[] = [`0x0000`, `0x1234`];
+    if (isPending) return <div> ...isLoading</div>;
+    else if (arrayOfVaults !== undefined)
+        return (
+            <div>
+                <h1 className="text-4xl mb-8">My Deposits</h1>
+                <DepositMoreTable></DepositMoreTable>
 
-    return (
-        <div>
-            <h1 className="text-4xl mb-8">My Deposits</h1>
-            <DepositMoreTable></DepositMoreTable>
-
-            <h1 className="text-4xl mb-8">MORE Vaults</h1>
-            <EarnMoreTable availableVaults={vaults}></EarnMoreTable>
-        </div>
-    );
+                <h1 className="text-4xl mb-8">MORE Vaults</h1>
+                <EarnMoreTable availableVaults={arrayOfVaults}></EarnMoreTable>
+            </div>
+        );
 };
 
 export default EarnPage;

@@ -50,6 +50,18 @@ const BorrowMoreTableRow: React.FC<BorrowMoreTableRowProps> = ({
         totalDeposits: 1245,
         totalValueUSD: 1245,
     };
+
+    // TODO MOCK data
+    const title = "USDMax";
+    const balanceToken: number = 473.18;
+    const balanceFlow: number = 785.45;
+    const totalDeposit: number = 3289.62;
+    const totalTokenAmount: number = 1.96;
+    const curator = "Flowverse";
+    const credora = "AAA";
+
+    const ltvStr = `${item.liquidationLTV}% / ${item.liquidationLTV2}%`;
+
     const [isStickyDisabled, setIsStickyDisabled] = useState(false);
     const toggleSticky = () => {
         console.log(isStickyDisabled);
@@ -127,16 +139,16 @@ const BorrowMoreTableRow: React.FC<BorrowMoreTableRowProps> = ({
                                 <>
                                     <div className=" w-full h-full">
                                         <VaultBorrow
-                                            title="USDMax"
+                                            title={title}
                                             token={item.collateralToken}
-                                            apy={14.1}
-                                            balanceToken={473.18}
-                                            balanceFlow={785.45}
-                                            ltv="90% / 125%"
-                                            totalDeposit={3289.62}
-                                            totalTokenAmount={1.96}
-                                            curator="Flowverse"
-                                            credora="AAA"
+                                            apy={item.borrowAPY}
+                                            balanceToken={balanceToken}
+                                            balanceFlow={balanceFlow}
+                                            ltv={ltvStr}
+                                            totalDeposit={totalDeposit}
+                                            totalTokenAmount={totalTokenAmount}
+                                            curator={curator}
+                                            credora={credora}
                                             marketParams={marketParameters}
                                             closeModal={closeModal}
                                         ></VaultBorrow>

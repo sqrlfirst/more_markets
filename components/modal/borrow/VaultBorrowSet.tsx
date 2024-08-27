@@ -5,10 +5,18 @@ import TotalVolumeToken from "../../token/TotalVolumeToken";
 import MoreButton from "../../moreButton/MoreButton";
 import ListIconToken from "@/components/token/ListIconToken";
 import FormatPourcentage from "@/components/tools/formatPourcentage";
-import { useWriteContract } from "wagmi";
+import {
+    type BaseError,
+    useWriteContract,
+    useWaitForTransactionReceipt,
+} from "wagmi";
 import { MarketsAbi } from "@/app/abi/MarketsAbi";
 import { MarketParams } from "@/types/marketParams";
 import { useAccount } from "wagmi";
+import { ERC20Abi } from "@/app/abi/ERC20Abi";
+import { ethers } from "ethers";
+
+import { Providers } from "@/app/providers";
 
 interface Props {
     title: string;
@@ -41,10 +49,21 @@ const VaultBorrowSet: React.FC<Props> = ({
 }) => {
     const [deposit, setDeposit] = useState<number>(0);
     const [borrow, setBorrow] = useState<number>(0);
-    const { data, writeContract } = useWriteContract();
+    const { data: hash, error, isPending, writeContract } = useWriteContract();
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const [txStep, setTxStep] = useState(1);
+    const { address } = useAccount();
+
+    const handleInputDepositChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
         setDeposit(parseFloat(event.target.value));
+    };
+
+    const handleInputBorrowChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        setBorrow(parseFloat(event.target.value));
     };
 
     const handleSetMaxToken = (maxValue: number) => {
@@ -56,19 +75,112 @@ const VaultBorrowSet: React.FC<Props> = ({
     };
 
     const handleBorrow = () => {
-        console.log("DEPOSIT");
         if (deposit > 0 && borrow > 0) {
             setAmount(deposit, borrow);
         }
     };
 
+    async function submit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+
+        const onBehalf = address !== undefined ? address : `0x0`; // feature of sc that is not supported in current fe implementation
+        const receiver = address !== undefined ? address : `0x0`;
+        const loanToken = marketParams.loanToken;
+        const collateralToken = marketParams.collateralToken;
+        const oracle = marketParams.oracle;
+        const irm = marketParams.irm;
+        const lltv = marketParams.lltv;
+        const depositAmount = ethers.parseEther(deposit.toString());
+        const borrowAmount = ethers.parseEther(borrow.toString());
+        console.log("enter function");
+
+        console.log("deposit: ", depositAmount);
+        console.log("borrow: ", borrowAmount);
+        console.log("loan token: ", loanToken);
+        console.log("collateral token: ", collateralToken);
+        console.log("oracle: ", oracle);
+        console.log("irm: ", irm);
+        console.log("lltv: ", lltv);
+        console.log("onBehalf ", onBehalf);
+        console.log("receiver ", receiver);
+        console.log("txStep ", txStep);
+
+        switch (txStep) {
+            case 1: {
+                writeContract({
+                    address: collateralToken,
+                    abi: ERC20Abi,
+                    functionName: "approve",
+                    args: [
+                        process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
+                        depositAmount,
+                    ],
+                });
+                setTxStep(2);
+                break;
+            }
+            case 2: {
+                console.log("entered supply function");
+                writeContract({
+                    address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
+                    abi: MarketsAbi,
+                    functionName: "supply",
+                    args: [
+                        { loanToken, collateralToken, oracle, irm, lltv },
+                        BigInt(0),
+                        depositAmount,
+                        onBehalf,
+                        receiver,
+                    ],
+                });
+                setTxStep(3);
+                break;
+            }
+            case 3: {
+                writeContract({
+                    address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
+                    abi: MarketsAbi,
+                    functionName: "borrow",
+                    args: [
+                        { loanToken, collateralToken, oracle, irm, lltv },
+                        BigInt(0),
+                        borrowAmount,
+                        onBehalf,
+                        receiver,
+                    ],
+                });
+                break;
+            }
+            default: {
+            }
+        }
+    }
+
     const handleCancel = () => {
         console.log("CANCEL");
     };
-    const { address } = useAccount();
+
+    const renderButton = (step: number): string => {
+        switch (step) {
+            case 1:
+                return isPending ? "Confirming..." : "Approve";
+            case 2:
+                return isPending ? "Confirming..." : "Deposit";
+            case 3:
+                return isPending ? "Confirming..." : "Borrow";
+            default:
+                return "";
+        }
+    };
+
+    const { isLoading: isConfirming, isSuccess: isConfirmed } =
+        useWaitForTransactionReceipt({
+            hash,
+        });
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
+        console.log("HANDLE SUBMIT");
 
         const onBehalf = address !== undefined ? address : `0x0`; // feature of sc that is not supported in current fe implementation
         const receiver = address !== undefined ? address : `0x0`;
@@ -97,7 +209,7 @@ const VaultBorrowSet: React.FC<Props> = ({
 
     return (
         <div className="more-bg-secondary w-full rounded-[20px]">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={submit}>
                 <div className="text-2xl mb-10 px-4 pt-5 ">Borrow</div>
                 <div className="text-l mb-1 px-4">
                     Deposit {token} Collateral
@@ -106,7 +218,7 @@ const VaultBorrowSet: React.FC<Props> = ({
                     <InputTokenMax
                         type="number"
                         value={deposit}
-                        onChange={handleInputChange}
+                        onChange={handleInputDepositChange}
                         min="0"
                         max={balanceTokenString}
                         placeholder={`Deposit ${token}`}
@@ -123,7 +235,7 @@ const VaultBorrowSet: React.FC<Props> = ({
                     <InputTokenMax
                         type="number"
                         value={borrow}
-                        onChange={handleInputChange}
+                        onChange={handleInputBorrowChange}
                         min="0"
                         max={balanceFlowString}
                         placeholder={`Deposit ${balanceFlow}`}
@@ -144,12 +256,34 @@ const VaultBorrowSet: React.FC<Props> = ({
                             color="gray"
                         />
                     </div>
-                    <MoreButton
+                    <button
+                        type="submit"
                         className="text-2xl py-2"
-                        text="Borrow"
-                        onClick={() => handleBorrow()}
                         color="secondary"
-                    />
+                    >
+                        {txStep == 1
+                            ? isConfirming
+                                ? "Confirming..."
+                                : "Approve"
+                            : txStep == 2
+                            ? isConfirming
+                                ? "Confirming..."
+                                : "Deposit"
+                            : txStep == 3
+                            ? isConfirming
+                                ? "Confirming..."
+                                : "Borrow"
+                            : ""}
+                        {hash && <div>Transaction Hash: {hash}</div>}
+                    </button>
+                    {isConfirming && <div>Waiting for confirmation...</div>}
+                    {isConfirmed && <div>Transaction confirmed.</div>}
+                    {error && (
+                        <div>
+                            Error:{" "}
+                            {(error as BaseError).shortMessage || error.message}
+                        </div>
+                    )}
                 </div>
                 <div className="w-[50%] mx-15 flex justify-center mx-auto">
                     <div className="glowing-text-secondary w-full"></div>

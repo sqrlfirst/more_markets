@@ -1,6 +1,6 @@
 import { Abi } from "viem";
 
-export const VaultsAbi: Abi = [
+export const VaultsAbi = [
     {
         type: "constructor",
         inputs: [

@@ -53,6 +53,7 @@ const VaultBorrow: React.FC<Props> = ({
         setBorrow(borrow);
     };
 
+    // likely useless
     const handleValidDeposit = () => {
         console.log("DEPOSIT VALID");
         setStep(3);
