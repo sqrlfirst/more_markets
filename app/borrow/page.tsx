@@ -30,7 +30,9 @@ const BorrowPage: React.FC = () => {
         return (
             <div>
                 <h1 className="text-4xl mb-4">My Loans</h1>
-                <LoanMoreTable></LoanMoreTable>
+                <LoanMoreTable
+                    availableMarkets={arrayOfMarkets}
+                ></LoanMoreTable>
 
                 <h1 className="text-4xl mb-4">MORE Markets</h1>
                 <BorrowMoreTable

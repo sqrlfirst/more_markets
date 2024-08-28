@@ -13,10 +13,13 @@ import {
     type BaseError,
     useWaitForTransactionReceipt,
     useWriteContract,
+    useAccount,
 } from "wagmi";
-import { MarketsAbi } from "@/app/abi/DebtTokenAbi";
+import { MarketsAbi } from "@/app/abi/MarketsAbi";
 import { MarketParams } from "@/types/marketParams";
-import { useAccount } from "wagmi";
+import { ERC20Abi } from "@/app/abi/ERC20Abi";
+
+import { ethers } from "ethers";
 
 interface Props {
     title: string;
@@ -44,6 +47,7 @@ const VaultAddSet: React.FC<Props> = ({
     closeModal,
 }) => {
     const [deposit, setAdd] = useState<number>(0);
+    const [txStep, setTxStep] = useState(1);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setAdd(parseFloat(event.target.value));
@@ -66,30 +70,54 @@ const VaultAddSet: React.FC<Props> = ({
 
     const { data: hash, error, isPending, writeContract } = useWriteContract();
     const { address } = useAccount();
+    const { isLoading: isConfirming, isSuccess: isConfirmed } =
+        useWaitForTransactionReceipt({
+            hash,
+        });
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        // TODO
 
         const loanToken = marketParams.loanToken;
         const collateralToken = marketParams.collateralToken;
         const oracle = marketParams.oracle;
         const irm = marketParams.irm;
         const lltv = marketParams.lltv;
-        const onBehalf = address;
+        const onBehalf = address !== undefined ? address : `0x0`; // feature of sc that is not supported in current fe implementation
+        const depositAmount = ethers.parseEther(deposit.toString());
 
-        writeContract({
-            address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
-            abi: MarketsAbi,
-            functionName: "supply",
-            args: [
-                { loanToken, collateralToken, oracle, irm, lltv },
-                BigInt(0),
-                BigInt(1234),
-                onBehalf,
-                "",
-            ],
-        });
+        switch (txStep) {
+            case 1: {
+                writeContract({
+                    address: collateralToken,
+                    abi: ERC20Abi,
+                    functionName: "approve",
+                    args: [
+                        process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
+                        depositAmount,
+                    ],
+                });
+                setTxStep(2);
+                break;
+            }
+
+            case 2: {
+                writeContract({
+                    address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
+                    abi: MarketsAbi,
+                    functionName: "supplyCollateral",
+                    args: [
+                        { loanToken, collateralToken, oracle, irm, lltv },
+                        depositAmount,
+                        onBehalf,
+                        "0x",
+                    ],
+                });
+                break;
+            }
+            default: {
+            }
+        }
     };
 
     const balanceString = balance.toString();
@@ -155,12 +183,47 @@ const VaultAddSet: React.FC<Props> = ({
                             color="gray"
                         />
                     </div>
-                    <MoreButton
+                    <button
+                        type="submit"
                         className="text-2xl py-2"
-                        text="Confirm"
+                        color="secondary"
+                    >
+                        {txStep == 1
+                            ? isConfirming
+                                ? "Confirming..."
+                                : "Approve"
+                            : txStep == 2
+                            ? isConfirming
+                                ? "Confirming..."
+                                : "Deposit"
+                            : ""}
+                        {hash && <div>Transaction Hash: {hash}</div>}
+                    </button>
+                    {isConfirming && <div>Waiting for confirmation...</div>}
+                    {isConfirmed && <div>Transaction confirmed.</div>}
+                    {error && (
+                        <div>
+                            Error:{" "}
+                            {(error as BaseError).shortMessage || error.message}
+                        </div>
+                    )}
+
+                    {/* <MoreButton
+                        className="text-2xl py-2"
+                        text={
+                            txStep == 1
+                                ? isConfirming
+                                    ? "Confirming..."
+                                    : "Approve"
+                                : txStep == 2
+                                ? isConfirming
+                                    ? "Confirming..."
+                                    : "Deposit"
+                                : ""
+                        }
                         onClick={() => handleAdd()}
                         color="primary"
-                    />
+                    /> */}
                 </div>
                 <div className="w-[50%] mx-15 flex justify-center mx-auto">
                     <div className="glowing-text-primary w-full"></div>

@@ -159,19 +159,6 @@ const VaultBorrowSet: React.FC<Props> = ({
         console.log("CANCEL");
     };
 
-    const renderButton = (step: number): string => {
-        switch (step) {
-            case 1:
-                return isPending ? "Confirming..." : "Approve";
-            case 2:
-                return isPending ? "Confirming..." : "Deposit";
-            case 3:
-                return isPending ? "Confirming..." : "Borrow";
-            default:
-                return "";
-        }
-    };
-
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
             hash,

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Icon from "../FontAwesomeIcon";
 import TableHeaderCell from "./MoreTableHeader";
 import ButtonDialog from "../buttonDialog/buttonDialog";
@@ -20,12 +20,75 @@ import VaultWithdrawBorrow from "../modal/withdrawBorrow/VaultWithdrawBorrow";
 import VaultAdd from "../modal/add/VaultAdd";
 import VaultBorrow from "../modal/borrow/VaultBorrow";
 import { MarketParams } from "@/types/marketParams";
+import {
+    type BaseError,
+    useWriteContract,
+    useReadContract,
+    useAccount,
+    useWaitForTransactionReceipt,
+} from "wagmi";
+import { MarketsAbi } from "@/app/abi/MarketsAbi";
 
-const LoanMoreTable: React.FC<{}> = () => {
+interface ILoanMoreTable {
+    availableMarkets: readonly `0x${string}`[];
+}
+const LoanMoreTable: React.FC<ILoanMoreTable> = ({ availableMarkets }) => {
+    const { address } = useAccount();
+
+    const addressStable: `0x${string}` =
+        address !== undefined ? address : `0x0`;
+
+    const positions = availableMarkets.map((market, index) => {
+        const {
+            data: positions,
+            isError: issuesIsError,
+            isSuccess,
+            isPending,
+            queryKey: issuesQueryKey,
+            refetch: refetchProject,
+        } = useReadContract({
+            address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
+            abi: MarketsAbi,
+            functionName: "position",
+            args: [market, addressStable],
+        });
+
+        if (positions !== undefined) {
+            return positions;
+        } else return undefined;
+    });
+
+    const loanDataFromPositions: LoanData[] = positions.map(
+        (position, index) => {
+            if (position === undefined)
+                return {
+                    token: "USDC",
+                    amountCollateral: 3289.62,
+                    amountLoan: 1234,
+                    valueUSD: 1.96,
+                    liquidationLTV: 90,
+                    liquidationLTV2: 125,
+                    borrowAPY: 14.1,
+                };
+            else {
+                return {
+                    token: "USDC",
+                    amountCollateral: position[2] as unknown as number,
+                    amountLoan: position[1] as unknown as number,
+                    valueUSD: 1.96,
+                    liquidationLTV: 90,
+                    liquidationLTV2: 125,
+                    borrowAPY: 14.1,
+                };
+            }
+        }
+    );
+
     const loansData: LoanData[] = [
         {
             token: "USDC",
-            amount: 3289.62,
+            amountCollateral: 3289.62,
+            amountLoan: 1234,
             valueUSD: 1.96,
             liquidationLTV: 90,
             liquidationLTV2: 125,
@@ -33,13 +96,50 @@ const LoanMoreTable: React.FC<{}> = () => {
         },
         {
             token: "USDT",
-            amount: 5432.1,
+            amountCollateral: 3289.62,
+            amountLoan: 1234,
             valueUSD: 3.25,
             liquidationLTV: 85,
             liquidationLTV2: 125,
             borrowAPY: 12.3,
         },
     ];
+
+    const marketParamsReal: MarketParams[] = availableMarkets.map(
+        (market, index) => {
+            const {
+                data: marketParam,
+                isPending,
+                refetch: refetchProject,
+                isSuccess,
+            } = useReadContract({
+                address: process.env.NEXT_PUBLIC_MARKETS as `0x${string}`,
+                abi: MarketsAbi,
+                functionName: "idToMarketParams",
+                args: [market],
+            });
+
+            if (marketParam !== undefined) {
+                return {
+                    loanToken:
+                        marketParam !== undefined ? marketParam[0] : `0x0`,
+                    collateralToken:
+                        marketParam !== undefined ? marketParam[1] : `0x0`,
+                    oracle: marketParam !== undefined ? marketParam[2] : `0x0`,
+                    irm: marketParam !== undefined ? marketParam[3] : `0x0`,
+                    lltv:
+                        marketParam !== undefined ? marketParam[4] : BigInt(0),
+                };
+            } else
+                return {
+                    loanToken: `0x123456`,
+                    collateralToken: `0x123456`,
+                    oracle: `0x123456`,
+                    irm: `0x123456`,
+                    lltv: BigInt(123),
+                };
+        }
+    );
 
     const marketParams: MarketParams = {
         loanToken: `0x123456`,
@@ -101,7 +201,7 @@ const LoanMoreTable: React.FC<{}> = () => {
                     </tr>
                 </thead>
                 <tbody className="bg-transparent">
-                    {loansData.map((item, index, arr) => (
+                    {loanDataFromPositions.map((item, index, arr) => (
                         <tr
                             key={index}
                             style={
@@ -129,7 +229,7 @@ const LoanMoreTable: React.FC<{}> = () => {
                                     </div>
                                     <span> &lt; </span>
                                     <FormatTokenMillion
-                                        value={item.amount}
+                                        value={item.amountCollateral}
                                         token={item.token}
                                         totalValue={item.valueUSD}
                                     ></FormatTokenMillion>
@@ -151,7 +251,9 @@ const LoanMoreTable: React.FC<{}> = () => {
                                                         totalTokenAmount={1.96}
                                                         curator="Flowverse"
                                                         marketParams={
-                                                            marketParams
+                                                            marketParamsReal[
+                                                                index
+                                                            ]
                                                         }
                                                         closeModal={closeModal}
                                                     ></VaultAdd>
@@ -192,7 +294,7 @@ const LoanMoreTable: React.FC<{}> = () => {
                                         tokenName={item.token.toLocaleLowerCase()}
                                     ></IconToken>
                                     <FormatTokenMillion
-                                        value={item.amount}
+                                        value={item.amountLoan}
                                         token={item.token}
                                         totalValue={item.valueUSD}
                                     ></FormatTokenMillion>
@@ -216,7 +318,9 @@ const LoanMoreTable: React.FC<{}> = () => {
                                                         curator="Flowverse"
                                                         credora="AAA"
                                                         marketParams={
-                                                            marketParams
+                                                            marketParamsReal[
+                                                                index
+                                                            ]
                                                         }
                                                         closeModal={closeModal}
                                                     ></VaultBorrow>{" "}
